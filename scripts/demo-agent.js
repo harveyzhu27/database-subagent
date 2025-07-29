@@ -39,7 +39,7 @@ function showCurrentStatus() {
 
 function showDemoSteps() {
   console.log('🎬 Demo Steps:');
-  console.log('1. Start the agent: npm run orchids-agent');
+  console.log('1. Start the agent: npm run database-agent');
   console.log('2. Ask: "Can you store the recently played songs in a table"');
   console.log('3. Watch the agent create tables, routes, and integrate frontend');
   console.log('4. Test the results at http://localhost:3001');
@@ -108,7 +108,7 @@ async function runDemo() {
   console.log('🎉 Demo Complete!');
   console.log('');
   console.log('To see the agent in action:');
-  console.log('1. Run: npm run orchids-agent');
+  console.log('1. Run: npm run database-agent');
   console.log('2. Ask: "Can you store the recently played songs in a table"');
   console.log('3. Watch the magic happen! 🪄');
 }

@@ -1166,7 +1166,7 @@ export default function ${component}({ }: ${component}Props) {
 🌱 Orchids Database Agent
 
 Usage:
-  node orchids-agent.js <command> [query]
+  node database-agent.js <command> [query]
 
 Commands:
   --generate <query>    Generate database schema and API routes
@@ -1174,10 +1174,10 @@ Commands:
   --help               Show this help message
 
 Examples:
-  node orchids-agent.js --implement "store recently played songs"
-  node orchids-agent.js --implement "store made for you playlists"
-  node orchids-agent.js --implement "store popular albums"
-  node orchids-agent.js --generate "user profiles"
+  node database-agent.js --implement "store recently played songs"
+  node database-agent.js --implement "store made for you playlists"
+  node database-agent.js --implement "store popular albums"
+  node database-agent.js --generate "user profiles"
 
 Supported Features:
   - Recently played songs

@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// ⬇️ Added by orchids-agent
+// ⬇️ Added by database-agent
 import { NextRequest, NextResponse } from "next/server";
 import { getUserProfile, upsertUserProfile, getUserPreferences, upsertUserPreferences } from "@/lib/db/queries";
 
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// ⬇️ Added by orchids-agent
+// ⬇️ Added by database-agent
 import { NextRequest, NextResponse } from "next/server";
 import { getUserProfile, upsertUserProfile, getUserPreferences, upsertUserPreferences } from "@/lib/db/queries";
 
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// ⬇️ Added by orchids-agent
+// ⬇️ Added by database-agent
 import { NextRequest, NextResponse } from "next/server";
 import { getUserProfile, upsertUserProfile, getUserPreferences, upsertUserPreferences } from "@/lib/db/queries";
 
