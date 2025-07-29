@@ -193,3 +193,16 @@ export type NewPopularAlbum = typeof popularAlbums.$inferInsert;
 export type UserSongInteraction = typeof userSongInteractions.$inferSelect;
 export type NewUserSongInteraction = typeof userSongInteractions.$inferInsert;
 
+
+
+// StoreLikedSongs table schema
+export const storeLikedSongs = pgTable("store_liked_songs", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type StoreLikedSongs = typeof storeLikedSongs.$inferSelect;
+export type NewStoreLikedSongs = typeof storeLikedSongs.$inferInsert;
+

@@ -3,6 +3,8 @@
 import { Play, User } from "lucide-react"
 import { useState } from "react"
 import RecentlyPlayedList, { RecentlyPlayedSong } from "./recently-played-list"
+import PlaylistList from "./playlistlist"
+import StoreLikedSongsList from "./storelikedsongslist"
 import MadeForYouList, { MadeForYouRecommendation } from "./made-for-you-list"
 import PopularAlbumsList, { PopularAlbum } from "./popular-albums-list"
 import StoreUserFavoritesList from "./storeuserfavoriteslist"
