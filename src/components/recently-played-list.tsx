@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { Play, Clock, Music } from 'lucide-react'
+import { Play, Clock, Music, Heart, HeartOff } from 'lucide-react'
 
 // Type for recently played song
 export interface RecentlyPlayedSong {
@@ -13,6 +13,8 @@ export interface RecentlyPlayedSong {
   album_art?: string
   played_at: string
   duration_ms?: number
+  liked?: boolean
+  play_count?: number
 }
 
 interface RecentlyPlayedListProps {
@@ -20,6 +22,7 @@ interface RecentlyPlayedListProps {
   limit?: number
   className?: string
   onPlayTrack?: (song: RecentlyPlayedSong) => void
+  onToggleLike?: (song: RecentlyPlayedSong) => void
   showHeader?: boolean
 }
 
@@ -28,6 +31,7 @@ export default function RecentlyPlayedList({
   limit = 10,
   className = '',
   onPlayTrack,
+  onToggleLike,
   showHeader = true
 }: RecentlyPlayedListProps) {
   const [songs, setSongs] = useState<RecentlyPlayedSong[]>([])
@@ -169,17 +173,36 @@ export default function RecentlyPlayedList({
                 <span>{formatDuration(song.duration_ms)}</span>
               )}
               <span>{formatPlayedAt(song.played_at)}</span>
+              {song.play_count && song.play_count > 1 && (
+                <span className="text-[#1db954]">{song.play_count} plays</span>
+              )}
             </div>
             
-            <button 
-              className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-[#404040] rounded-full"
-              onClick={(e) => {
-                e.stopPropagation()
-                onPlayTrack?.(song)
-              }}
-            >
-              <Play className="w-4 h-4 text-white" />
-            </button>
+            <div className="flex items-center space-x-1">
+              <button 
+                className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-[#404040] rounded-full"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onToggleLike?.(song)
+                }}
+              >
+                {song.liked ? (
+                  <Heart className="w-4 h-4 text-[#1db954] fill-[#1db954]" />
+                ) : (
+                  <HeartOff className="w-4 h-4 text-[#b3b3b3]" />
+                )}
+              </button>
+              
+              <button 
+                className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-[#404040] rounded-full"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onPlayTrack?.(song)
+                }}
+              >
+                <Play className="w-4 h-4 text-white" />
+              </button>
+            </div>
           </div>
         ))}
       </div>

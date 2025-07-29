@@ -5,6 +5,7 @@ import SpotifySidebar from '@/components/spotify-sidebar'
 import SpotifyMainContent from '@/components/spotify-main-content'
 import SpotifyPlayer from '@/components/spotify-player'
 import SpotifyHeader from '@/components/spotify-header'
+import { RecentlyPlayedSong } from '@/components/recently-played-list'
 
 interface Track {
   id: string
@@ -121,6 +122,33 @@ export default function SpotifyApp() {
     setIsLiked(!isLiked)
   }
 
+  const handleToggleSongLike = async (song: RecentlyPlayedSong) => {
+    try {
+      const response = await fetch('/api/recently-played', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: song.user_id,
+          song_id: song.song_id,
+          liked: !song.liked,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to toggle song like')
+      }
+
+      // Update the current track's liked status if it matches
+      if (currentTrack?.id === song.song_id) {
+        setIsLiked(!song.liked)
+      }
+    } catch (error) {
+      console.error('Error toggling song like:', error)
+    }
+  }
+
   const handleSearchChange = (query: string) => {
     setSearchQuery(query)
   }
@@ -161,7 +189,7 @@ export default function SpotifyApp() {
 
           {/* Main Content */}
           <div className="flex-1 overflow-y-auto pb-24">
-            {currentView === 'home' && <SpotifyMainContent onPlayTrack={handlePlayTrack} />}
+            {currentView === 'home' && <SpotifyMainContent onPlayTrack={handlePlayTrack} onToggleLike={handleToggleSongLike} />}
             {currentView === 'search' && (
               <div className="p-6">
                 <h1 className="text-2xl font-bold mb-6">Search</h1>

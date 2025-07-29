@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRecentlyPlayedSongs, addRecentlyPlayedSong } from "@/lib/db/queries";
+import { getRecentlyPlayedSongs, addRecentlyPlayedSong, toggleSongLike } from "@/lib/db/queries";
 
 // GET handler to fetch recently played songs
 export async function GET(request: NextRequest) {
@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
       artist_name,
       album_art,
       duration_ms,
+      liked: body.liked,
     });
 
     return NextResponse.json({ success: true });
@@ -54,6 +55,31 @@ export async function POST(request: NextRequest) {
     console.error("API Error:", error);
     return NextResponse.json(
       { error: "Failed to add recently played song" },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH handler to toggle song like status
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { user_id, song_id, liked } = body;
+
+    if (!user_id || !song_id || typeof liked !== 'boolean') {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    await toggleSongLike(user_id, song_id, liked);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("API Error:", error);
+    return NextResponse.json(
+      { error: "Failed to toggle song like" },
       { status: 500 }
     );
   }

@@ -1,5 +1,19 @@
 import { pgTable, serial, text, timestamp, integer, boolean } from "drizzle-orm/pg-core";
 
+// Songs table schema - base songs with metadata
+export const songs = pgTable("songs", {
+  id: serial("id").primaryKey(),
+  song_id: text("song_id").notNull().unique(),
+  title: text("title").notNull(),
+  artist: text("artist").notNull(),
+  album: text("album").notNull(),
+  album_art: text("album_art"),
+  duration_ms: integer("duration_ms"),
+  genre: text("genre"),
+  release_date: timestamp("release_date"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Recently played songs table schema
 export const recentlyPlayed = pgTable("recently_played", {
   id: serial("id").primaryKey(),
@@ -10,6 +24,49 @@ export const recentlyPlayed = pgTable("recently_played", {
   album_art: text("album_art"),
   played_at: timestamp("played_at").defaultNow().notNull(),
   duration_ms: integer("duration_ms"),
+  liked: boolean("liked").default(false), // NEW: Track if user liked this song
+  play_count: integer("play_count").default(1), // NEW: Track how many times played
+});
+
+// Made for you recommendations table
+export const madeForYou = pgTable("made_for_you", {
+  id: serial("id").primaryKey(),
+  user_id: text("user_id").notNull(),
+  song_id: text("song_id").notNull(),
+  song_title: text("song_title").notNull(),
+  artist_name: text("artist_name").notNull(),
+  album_art: text("album_art"),
+  album_name: text("album_name").notNull(),
+  duration_ms: integer("duration_ms"),
+  recommendation_reason: text("recommendation_reason"), // e.g., "Based on your listening history"
+  confidence_score: integer("confidence_score"), // 1-100 score for recommendation quality
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Popular albums table
+export const popularAlbums = pgTable("popular_albums", {
+  id: serial("id").primaryKey(),
+  album_id: text("album_id").notNull().unique(),
+  album_title: text("album_title").notNull(),
+  artist_name: text("artist_name").notNull(),
+  album_art: text("album_art"),
+  genre: text("genre"),
+  release_date: timestamp("release_date"),
+  total_plays: integer("total_plays").default(0),
+  weekly_plays: integer("weekly_plays").default(0),
+  monthly_plays: integer("monthly_plays").default(0),
+  popularity_score: integer("popularity_score").default(0), // 1-100 popularity score
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// User song interactions table - track likes, skips, etc.
+export const userSongInteractions = pgTable("user_song_interactions", {
+  id: serial("id").primaryKey(),
+  user_id: text("user_id").notNull(),
+  song_id: text("song_id").notNull(),
+  interaction_type: text("interaction_type").notNull(), // 'like', 'skip', 'play', 'share'
+  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Playlists table schema
@@ -122,4 +179,17 @@ export const storeUserFavorites = pgTable("store_user_favorites", {
 
 export type StoreUserFavorites = typeof storeUserFavorites.$inferSelect;
 export type NewStoreUserFavorites = typeof storeUserFavorites.$inferInsert;
+
+// New type definitions
+export type Song = typeof songs.$inferSelect;
+export type NewSong = typeof songs.$inferInsert;
+
+export type MadeForYou = typeof madeForYou.$inferSelect;
+export type NewMadeForYou = typeof madeForYou.$inferInsert;
+
+export type PopularAlbum = typeof popularAlbums.$inferSelect;
+export type NewPopularAlbum = typeof popularAlbums.$inferInsert;
+
+export type UserSongInteraction = typeof userSongInteractions.$inferSelect;
+export type NewUserSongInteraction = typeof userSongInteractions.$inferInsert;
 

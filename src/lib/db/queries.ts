@@ -8,10 +8,14 @@ import {
   featureItems,
   albums,
   albumSongs,
+  songs,
+  madeForYou,
+  popularAlbums,
+  userSongInteractions,
 } from "./schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, gte } from "drizzle-orm";
 
-// ✅ Recently Played Songs
+// ✅ Recently Played Songs - Updated with liked and play_count
 export async function getRecentlyPlayedSongs(userId: string, limit = 20) {
   try {
     const songs = await db
@@ -35,13 +39,200 @@ export async function addRecentlyPlayedSong(songData: {
   artist_name: string;
   album_art?: string;
   duration_ms?: number;
+  liked?: boolean;
 }) {
   try {
-    const result = await db.insert(recentlyPlayed).values(songData);
-    return result;
+    // Check if song already exists for this user
+    const existingSong = await db
+      .select()
+      .from(recentlyPlayed)
+      .where(and(
+        eq(recentlyPlayed.user_id, songData.user_id),
+        eq(recentlyPlayed.song_id, songData.song_id)
+      ))
+      .limit(1);
+
+    if (existingSong.length > 0) {
+      // Update existing record - increment play count and update timestamp
+      await db
+        .update(recentlyPlayed)
+        .set({
+          played_at: new Date(),
+          play_count: (existingSong[0].play_count || 1) + 1,
+          liked: songData.liked !== undefined ? songData.liked : existingSong[0].liked,
+        })
+        .where(eq(recentlyPlayed.id, existingSong[0].id));
+    } else {
+      // Insert new record
+      await db.insert(recentlyPlayed).values({
+        ...songData,
+        play_count: 1,
+        liked: songData.liked || false,
+      });
+    }
+
+    // Also record the interaction
+    await db.insert(userSongInteractions).values({
+      user_id: songData.user_id,
+      song_id: songData.song_id,
+      interaction_type: 'play',
+    });
   } catch (error) {
     console.error("Error adding recently played song:", error);
     throw new Error("Failed to add recently played song");
+  }
+}
+
+export async function toggleSongLike(userId: string, songId: string, liked: boolean) {
+  try {
+    await db
+      .update(recentlyPlayed)
+      .set({ liked })
+      .where(and(
+        eq(recentlyPlayed.user_id, userId),
+        eq(recentlyPlayed.song_id, songId)
+      ));
+
+    // Record the interaction
+    await db.insert(userSongInteractions).values({
+      user_id: userId,
+      song_id: songId,
+      interaction_type: liked ? 'like' : 'unlike',
+    });
+  } catch (error) {
+    console.error("Error toggling song like:", error);
+    throw new Error("Failed to toggle song like");
+  }
+}
+
+// ✅ Made for You Recommendations
+export async function getMadeForYouRecommendations(userId: string, limit = 20) {
+  try {
+    const recommendations = await db
+      .select()
+      .from(madeForYou)
+      .where(eq(madeForYou.user_id, userId))
+      .orderBy(desc(madeForYou.confidence_score))
+      .limit(limit);
+
+    return recommendations;
+  } catch (error) {
+    console.error("Error fetching made for you recommendations:", error);
+    throw new Error("Failed to fetch made for you recommendations");
+  }
+}
+
+export async function addMadeForYouRecommendation(recommendationData: {
+  user_id: string;
+  song_id: string;
+  song_title: string;
+  artist_name: string;
+  album_art?: string;
+  album_name: string;
+  duration_ms?: number;
+  recommendation_reason?: string;
+  confidence_score?: number;
+}) {
+  try {
+    await db.insert(madeForYou).values({
+      ...recommendationData,
+      confidence_score: recommendationData.confidence_score || 50,
+    });
+  } catch (error) {
+    console.error("Error adding made for you recommendation:", error);
+    throw new Error("Failed to add made for you recommendation");
+  }
+}
+
+// ✅ Popular Albums
+export async function getPopularAlbums(limit = 20) {
+  try {
+    return await db
+      .select()
+      .from(popularAlbums)
+      .orderBy(desc(popularAlbums.popularity_score))
+      .limit(limit);
+  } catch (error) {
+    console.error("Error fetching popular albums:", error);
+    throw new Error("Failed to fetch popular albums");
+  }
+}
+
+export async function addPopularAlbum(albumData: {
+  album_id: string;
+  album_title: string;
+  artist_name: string;
+  album_art?: string;
+  genre?: string;
+  release_date?: Date;
+  total_plays?: number;
+  weekly_plays?: number;
+  monthly_plays?: number;
+  popularity_score?: number;
+}) {
+  try {
+    await db.insert(popularAlbums).values({
+      ...albumData,
+      popularity_score: albumData.popularity_score || 50,
+    });
+  } catch (error) {
+    console.error("Error adding popular album:", error);
+    throw new Error("Failed to add popular album");
+  }
+}
+
+export async function updateAlbumPlayCount(albumId: string) {
+  try {
+    // First get the current values
+    const currentAlbum = await db
+      .select()
+      .from(popularAlbums)
+      .where(eq(popularAlbums.album_id, albumId))
+      .limit(1);
+
+    if (currentAlbum.length > 0) {
+      const current = currentAlbum[0];
+      await db
+        .update(popularAlbums)
+        .set({
+          total_plays: (current.total_plays || 0) + 1,
+          weekly_plays: (current.weekly_plays || 0) + 1,
+          monthly_plays: (current.monthly_plays || 0) + 1,
+          updated_at: new Date(),
+        })
+        .where(eq(popularAlbums.album_id, albumId));
+    }
+  } catch (error) {
+    console.error("Error updating album play count:", error);
+    throw new Error("Failed to update album play count");
+  }
+}
+
+// ✅ User Song Interactions
+export async function getUserSongInteractions(userId: string, limit = 50) {
+  try {
+    return await db
+      .select()
+      .from(userSongInteractions)
+      .where(eq(userSongInteractions.user_id, userId))
+      .orderBy(desc(userSongInteractions.created_at))
+      .limit(limit);
+  } catch (error) {
+    console.error("Error fetching user song interactions:", error);
+    throw new Error("Failed to fetch user song interactions");
+  }
+}
+
+export async function addUserSongInteraction(interactionData: {
+  user_id: string;
+  song_id: string;
+  interaction_type: 'like' | 'skip' | 'play' | 'share' | 'unlike';
+}) {
+  try {
+    await db.insert(userSongInteractions).values(interactionData);
+  } catch (error) {
+    console.error("Error adding user song interaction:", error);
+    throw new Error("Failed to add user song interaction");
   }
 }
 
@@ -230,8 +421,8 @@ export async function updateFeatureItem(
 }
 
 
-// ✅ Album Functions
-export async function getPopularAlbums(limit = 20) {
+// ✅ Album Functions (Legacy - keeping for backward compatibility)
+export async function getLegacyPopularAlbums(limit = 20) {
   try {
     return await db
       .select()
@@ -239,10 +430,12 @@ export async function getPopularAlbums(limit = 20) {
       .orderBy(desc(albums.created_at))
       .limit(limit);
   } catch (error) {
-    console.error("Error fetching popular albums:", error);
-    throw new Error("Failed to fetch popular albums");
+    console.error("Error fetching legacy popular albums:", error);
+    throw new Error("Failed to fetch legacy popular albums");
   }
 }
+
+
 
 
 
